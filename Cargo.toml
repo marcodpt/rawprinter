@@ -1,0 +1,35 @@
+[package]
+name = "rawprinter"
+version = "0.1.0"
+edition = "2021"
+authors = ["Marco Di Pillo Tomic <marcodpt@protonmail.com>"]
+license = "MIT"
+description = "An IOT server written in rust for connecting via USB to raw printers."
+readme = "README.md"
+homepage = "https://github.com/marcodpt/rawprinter"
+repository = "https://github.com/marcodpt/rawprinter"
+keywords = [
+  "rust",
+  "iot",
+  "printer",
+  "server",
+  "qrcode",
+  "barcode",
+  "zebra-printer",
+  "zebra",
+  "thermal-printer",
+  "iot-device",
+  "localserver",
+  "rawprint"
+]
+categories = ["hardware-support"]
+
+[dependencies]
+axum = "0"
+tokio = { version = "1", features = ["full"] }
+escpos-rs = "0"
+clap = {version = "4", features = ["derive"]}
+clap-num = "1"
+
+[profile.release]
+opt-level = 3
