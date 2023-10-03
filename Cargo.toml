@@ -9,18 +9,11 @@ readme = "README.md"
 homepage = "https://github.com/marcodpt/rawprinter"
 repository = "https://github.com/marcodpt/rawprinter"
 keywords = [
-  "rust",
   "iot",
   "printer",
   "server",
-  "qrcode",
   "barcode",
-  "zebra-printer",
-  "zebra",
-  "thermal-printer",
-  "iot-device",
-  "localserver",
-  "rawprint"
+  "zebra"
 ]
 categories = ["hardware-support"]
 
