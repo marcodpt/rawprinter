@@ -18,8 +18,7 @@ keywords = [
 categories = ["hardware-support"]
 
 [dependencies]
-axum = "0"
-tokio = { version = "1", features = ["full"] }
+tiny_http = "0"
 escpos-rs = "0"
 clap = {version = "4", features = ["derive"]}
 clap-num = "1"

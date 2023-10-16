@@ -1,9 +1,8 @@
+use std::error::Error;
 use escpos_rs::{Printer, PrinterProfile};
-use axum::{routing::post, Router, extract::Extension, http::StatusCode};
-use std::net::SocketAddr;
 use clap::{Parser};
 use clap_num::{maybe_hex};
-use std::sync::Arc;
+use tiny_http::{Server, Response};
 
 #[derive(Parser)]
 #[clap(author, version, about)]
@@ -21,34 +20,40 @@ struct Cli {
     device_id: u16,
 }
 
-#[tokio::main]
-async fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
 
-    let printer = Arc::new(Printer::new( PrinterProfile::usb_builder(
+    let printer = Printer::new(PrinterProfile::usb_builder(
         cli.vendor_id,
         cli.device_id
-    ).build()).unwrap().unwrap());
+    ).build())?.ok_or("no device found!")?;
 
-    let app = Router::new()
-        .route("/", post(handler))
-        .layer(Extension(printer));
+    let host = format!("0.0.0.0:{}", cli.port);
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], cli.port));
+    let server = match Server::http(&host) {
+        Ok(server) => server,
+        Err(msg) => {
+            return Err(msg.to_string().into());
+        }
+    };
 
-    println!("Raw Printer server running at: http://localhost:{}", cli.port);
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
-}
-
-async fn handler(
-    printer: Extension<Arc<Printer>>,
-    body: String,
-) -> (StatusCode, String) {
-    match printer.print(&body) {
-        Ok(()) => (StatusCode::OK, String::new()),
-        Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
+    println!("Raw Printer server running at: {}", host);
+    for mut request in server.incoming_requests() {
+        let method = request.method().to_string();
+        let url = request.url().to_string();
+        let mut body = String::new();
+        request.as_reader().read_to_string(&mut body)?;
+        request.respond(
+            if &method == "GET" && &url == "/" {
+                match printer.print(&body) {
+                    Ok(()) => Response::from_string("").with_status_code(200),
+                    Err(err) => Response::from_string(&err.to_string())
+                        .with_status_code(500)
+                }
+            } else {
+                Response::from_string("").with_status_code(404)
+            }
+        )?;
     }
+    Ok(())
 }
