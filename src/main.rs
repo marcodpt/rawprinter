@@ -8,7 +8,7 @@ use tiny_http::{Server, Response};
 #[clap(author, version, about)]
 struct Cli {
     ///HTTP port to listen to.
-    #[clap(short, long, default_value = "8080")]
+    #[clap(short, long, default_value = "8001")]
     port: u16,
 
     ///Device vendor ID in lsusb command
@@ -28,7 +28,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         cli.device_id
     ).build())?.ok_or("no device found!")?;
 
-    let host = format!("0.0.0.0:{}", cli.port);
+    let host = format!("localhost:{}", cli.port);
 
     let server = match Server::http(&host) {
         Ok(server) => server,
@@ -37,14 +37,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     };
 
-    println!("Raw Printer server running at: {}", host);
+    println!("Raw Printer server running at: http://{}", host);
     for mut request in server.incoming_requests() {
         let method = request.method().to_string();
         let url = request.url().to_string();
         let mut body = String::new();
         request.as_reader().read_to_string(&mut body)?;
         request.respond(
-            if &method == "GET" && &url == "/" {
+            if &method == "POST" && &url == "/" {
                 match printer.print(&body) {
                     Ok(()) => Response::from_string("").with_status_code(200),
                     Err(err) => Response::from_string(&err.to_string())
