@@ -1,8 +1,11 @@
+mod extra;
+
 use std::error::Error;
 use escpos_rs::{Printer, PrinterProfile};
 use clap::{Parser};
 use clap_num::{maybe_hex};
 use tiny_http::{Server, Response};
+use extra::escape;
 
 #[derive(Parser)]
 #[clap(author, version, about)]
@@ -42,10 +45,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         let method = request.method().to_string();
         let url = request.url().to_string();
         let mut body = String::new();
+
         request.as_reader().read_to_string(&mut body)?;
         request.respond(
             if &method == "POST" && &url == "/" {
-                match printer.print(&body) {
+                match printer.print(&escape(body)) {
                     Ok(()) => Response::from_string("").with_status_code(200),
                     Err(err) => Response::from_string(&err.to_string())
                         .with_status_code(500)
